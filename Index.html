@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vòng Quay Tùy Chỉnh</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background-color: #333; color: white; display: flex; justify-content: center; padding: 20px; }
+        h1 { margin-bottom: 20px; text-align: center; }
+        .tab { display: flex; margin-bottom: 20px; gap: 20px; }
+        button { padding: 10px; cursor: pointer; background: yellow; border: none; border-radius: 5px; transition: 0.3s; }
+        button:hover { background: orange; }
+        .container { display: none; width: 500px; background: #444; padding: 20px; border-radius: 10px; }
+        .active { display: block; }
+        textarea, input, select { margin-top: 10px; width: 100%; padding: 8px; border-radius: 5px; }
+        .wheel-container { position: relative; }
+        .wheel { width: 300px; height: 300px; border-radius: 50%; position: relative; overflow: hidden; box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+        .slice { position: absolute; width: 50%; height: 50%; clip-path: polygon(0 0, 100% 100%, 0 100%); transform-origin: bottom right; }
+        .slice span { position: absolute; right: -30px; bottom: 10px; transform: rotate(-45deg); font-size: 14px; color: black; font-weight: bold; white-space: nowrap; }
+    </style>
+</head>
+<body>
+<div>
+    <h1>Vòng Quay May Mắn</h1>
+    <!-- Tabs -->
+    <div class="tab">
+        <button onclick="switchTab('create')">Tạo Wheel</button>
+        <button onclick="switchTab('save')">Wheel Save</button>
+    </div>
+
+    <!-- Tab Tạo Wheel -->
+    <div id="createTab" class="container active">
+        <h2>Tạo Wheel</h2>
+        <label for="wheelName">Tên ô tam giác (cách nhau bởi dấu phẩy):</label>
+        <textarea id="wheelName" placeholder="VD: Nam,Duy,Bình" oninput="createWheel()"></textarea>
+        <button onclick="saveWheel()">💾 Lưu Wheel</button>
+        <div class="wheel-container">
+            <div id="wheel" class="wheel"></div>
+        </div>
+    </div>
+
+    <!-- Tab Wheel Save -->
+    <div id="saveTab" class="container">
+        <h2>Wheel Save</h2>
+        <select id="savedWheels" onchange="showSavedWheel()">
+            <option value="" disabled selected>Chọn Wheel đã lưu</option>
+        </select>
+        <div class="wheel-container">
+            <div id="savedWheel" class="wheel"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const wheelContainer = document.getElementById("wheel");
+    const savedWheelContainer = document.getElementById("savedWheel");
+    const wheelNameInput = document.getElementById("wheelName");
+    const savedWheelsDropdown = document.getElementById("savedWheels");
+    let options = [];
+    let savedWheels = JSON.parse(localStorage.getItem("savedWheels")) || [];
+
+    function switchTab(tab) {
+        document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+        document.getElementById(tab + "Tab").classList.add('active');
+        if (tab === 'save') loadSavedWheels();
+    }
+
+    // Tạo Wheel từ input
+    function createWheel() {
+        const input = wheelNameInput.value;
+        options = input.split(',').map(s => s.trim()).filter(s => s);
+        renderWheel(wheelContainer, options);
+    }
+
+    // Render Wheel dựa trên dữ liệu options
+    function renderWheel(container, optionsList) {
+        container.innerHTML = ''; // Reset wheel
+        const sliceCount = optionsList.length || 1;
+        const sliceAngle = 360 / sliceCount;
+
+        optionsList.forEach((text, i) => {
+            const slice = document.createElement('div');
+            slice.className = 'slice';
+            slice.style.transform = `rotate(${i * sliceAngle}deg)`;
+            slice.style.backgroundColor = `hsl(${(i * 360) / sliceCount}, 80%, 70%)`;
+            
+            const sliceText = document.createElement('div');
+            sliceText.textContent = text;
+            slice.appendChild(sliceText);
+            container.appendChild(slice);
+        });
+    }
+
+    // Lưu Wheel vào LocalStorage
+    function saveWheel() {
+        if (!options.length) return alert("Nhập ít nhất 1 ô tam giác!");
+        const wheelName = prompt("Nhập tên cho Wheel:", `Wheel ${savedWheels.length + 1}`);
+        if (wheelName) {
+            savedWheels.push({ name: wheelName, options: options });
+            localStorage.setItem("savedWheels", JSON.stringify(savedWheels));
+            alert("Wheel đã được lưu!");
+            wheelNameInput.value = ''; // Clear input
+            renderWheel(wheelContainer, []);
+        }
+    }
+
+    // Hiển thị danh sách Wheel đã lưu
+    function loadSavedWheels() {
+        savedWheelsDropdown.innerHTML = `<option value="" disabled selected>Chọn Wheel đã lưu</option>`;
+        savedWheels.forEach((wheel, index) => {
+            const option = document.createElement("option");
+            option.value = index;
+            option.textContent = wheel.name;
+            savedWheelsDropdown.appendChild(option);
+        });
+    }
+
+    // Hiển thị Wheel được chọn
+    // Cập nhật hàm showSavedWheel() để chuyển sang wheeltest.html
+function showSavedWheel() {
+    const selectedIndex = savedWheelsDropdown.value;
+    if (selectedIndex !== "") {
+        const selectedWheel = savedWheels[selectedIndex];
+        
+        // Lưu dữ liệu Wheel vào LocalStorage
+        localStorage.setItem("currentWheel", JSON.stringify(selectedWheel));
+        
+        // Chuyển hướng sang wheeltest.html
+        window.location.href = "WheelTest.html";
+    }
+}
+
+    // Load danh sách khi mở tab
+    window.onload = () => loadSavedWheels();
+</script>
+</body>
+</html>
