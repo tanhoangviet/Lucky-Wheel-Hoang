@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quay Wheel Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #222; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .wheel-container { position: relative; }
+        .wheel { width: 300px; height: 300px; border-radius: 50%; position: relative; overflow: hidden; box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+        .slice { position: absolute; width: 50%; height: 50%; clip-path: polygon(0 0, 100% 100%, 0 100%); transform-origin: bottom right; }
+        .slice span { position: absolute; right: -30px; bottom: 10px; transform: rotate(-45deg); font-size: 14px; color: black; font-weight: bold; white-space: nowrap; }
+        #spinButton { margin-top: 30px; padding: 10px 20px; font-size: 16px; background: yellow; color: black; border: none; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        #spinButton:disabled { background: gray; cursor: not-allowed; }
+        #notification { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); color: white; display: flex; align-items: center; justify-content: center; flex-direction: column; z-index: 9999; }
+        #notification button { margin-top: 20px; padding: 10px 20px; background: red; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="wheel-container">
+    <div id="wheel" class="wheel"></div>
+</div>
+<button id="spinButton" onclick="spinWheel()">🎡 Quay Ngay</button>
+
+<div id="notification">
+    <h1 id="winnerText"></h1>
+    <button onclick="closeNotification()">Đóng</button>
+</div>
+
+<script>
+    const wheelContainer = document.getElementById("wheel");
+    const spinButton = document.getElementById("spinButton");
+    const winnerText = document.getElementById("winnerText");
+    const notification = document.getElementById("notification");
+
+    let options = []; // Chứa danh sách options của bánh xe
+    let isSpinning = false; // Trạng thái đang quay
+    let sliceAngle = 0;
+
+    // Load dữ liệu Wheel từ LocalStorage
+    function loadSavedWheel() {
+        const savedWheel = JSON.parse(localStorage.getItem("currentWheel"));
+        if (savedWheel && savedWheel.options.length > 0) {
+            options = savedWheel.options;
+            renderWheel();
+        } else {
+            alert("Không tìm thấy dữ liệu Wheel!");
+        }
+    }
+
+    // Render Wheel với các slice chuẩn
+    function renderWheel() {
+        wheelContainer.innerHTML = '';
+        const totalSlices = options.length;
+        sliceAngle = 360 / totalSlices;
+
+        options.forEach((text, index) => {
+            const slice = document.createElement("div");
+            slice.classList.add("slice");
+            slice.style.backgroundColor = `hsl(${(index * 360) / totalSlices}, 70%, 60%)`;
+            slice.style.transform = `rotate(${index * sliceAngle}deg)`;
+            
+            const span = document.createElement("span");
+            span.textContent = text;
+
+            slice.appendChild(span);
+            wheelContainer.appendChild(slice);
+        });
+    }
+
+    // Hàm Quay Wheel
+    function spinWheel() {
+        if (isSpinning) return;
+
+        isSpinning = true;
+        spinButton.disabled = true;
+
+        const randomIndex = Math.floor(Math.random() * options.length);
+        const winningDegree = (360 - (randomIndex * sliceAngle + sliceAngle / 2)) + 1440; // Giữa phần slice
+        
+        wheelContainer.style.transition = "transform 5s cubic-bezier(0.17, 0.67, 0.83, 0.67)";
+        wheelContainer.style.transform = `rotate(${winningDegree}deg)`;
+
+        setTimeout(() => {
+            showWinner(options[randomIndex]);
+            isSpinning = false;
+            spinButton.disabled = false;
+        }, 5100); // Chờ kết thúc animation
+    }
+
+    // Hiện Notification kết quả
+    function showWinner(winner) {
+        winnerText.textContent = `🎉 Chúc mừng ${winner} đã chiến thắng! 🎉`;
+        notification.style.display = "flex";
+    }
+
+    // Đóng Notification
+    function closeNotification() {
+        notification.style.display = "none";
+    }
+
+    // Load dữ liệu bánh xe khi mở trang
+    window.onload = loadSavedWheel;
+</script>
+</body>
+</html>
