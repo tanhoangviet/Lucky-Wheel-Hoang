@@ -84,22 +84,25 @@
         });
     }
 
-    // Hàm Quay Wheel có hiệu ứng giảm tốc
-// Hàm Quay Wheel có hiệu ứng giảm tốc
+    
 function spinWheel() {
     if (isSpinning) return;
 
     isSpinning = true;
     spinButton.disabled = true;
 
+    const totalSlices = options.length;
+    const sliceAngle = 360 / totalSlices;
+
     let speed = 200; // Tốc độ ban đầu
-    let currentAngle = 0; // Góc quay hiện tại
+    let currentAngle = Math.random() * 360; // Ngẫu nhiên hóa góc ban đầu
+    let finalAngle = 0;
 
     // Giảm tốc theo thời gian
     const decelerationInterval = setInterval(() => {
         // Tính góc quay dựa vào tốc độ
         currentAngle += speed;
-        wheelContainer.style.transform = `rotate(${currentAngle}deg)`;
+        wheelContainer.style.transform = `rotate(${currentAngle % 360}deg)`;
 
         // Giảm tốc độ theo từng bước (mỗi 0.5s giảm 5 đơn vị)
         speed -= 5;
@@ -108,32 +111,32 @@ function spinWheel() {
         if (speed <= 0) {
             clearInterval(decelerationInterval);
 
-            // Thêm thời gian chờ 2 giây trước khi tính kết quả
+            // Tạo độ trễ 2 giây trước khi hiện kết quả
             setTimeout(() => {
-                // Tính toán ô kết quả
-                const sliceAngle = 360 / options.length;
-                const finalAngle = currentAngle % 360; // Lấy góc quay cuối cùng
+                // Xác định ô trúng thưởng
+                finalAngle = currentAngle % 360;
                 const selectedIndex = Math.floor((360 - finalAngle - sliceAngle / 2) / sliceAngle) % options.length;
 
                 // Hiện kết quả
                 showWinner(options[selectedIndex]);
                 spinButton.disabled = false;
                 isSpinning = false;
-            }, 6000); // Đợi 2 giây trước khi hiển thị kết quả
+            }, 2000); // Đợi 2 giây
         }
     }, 50); // Mỗi 0.05s cập nhật tốc độ và góc quay
 }
 
-    // Hiện Notification kết quả
-    function showWinner(winner) {
-        winnerText.textContent = `🎉 Chúc mừng ${winner} đã chiến thắng! 🎉`;
-        notification.style.display = "flex";
-    }
+// Hiện Notification kết quả
+function showWinner(winner) {
+    winnerText.textContent = `🎉 Chúc mừng ${winner} Lên Trả Bài :>`;
+    notification.style.display = "flex";
+}
 
-    // Đóng Notification
-    function closeNotification() {
-        notification.style.display = "none";
-    }
+// Đóng Notification
+function closeNotification() {
+    notification.style.display = "none";
+}
+
 
     // Load dữ liệu bánh xe khi mở trang
     window.onload = loadSavedWheel;
