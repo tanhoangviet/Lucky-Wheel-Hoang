@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vòng Quay Cực Kì May Mawnz</title>
+    <title>Vòng Quay Trả Bài</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: #222; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         .wheel-container { position: relative; }
-        .wheel { width: 300px; height: 300px; border-radius: 50%; position: relative; overflow: hidden; box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+        .wheel { width: 300px; height: 300px; border-radius: 50%; position: relative; overflow: hidden; box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); transition: transform 6s ease-out; }
         .slice { position: absolute; width: 50%; height: 50%; clip-path: polygon(0 0, 100% 100%, 0 100%); transform-origin: bottom right; }
         .slice span { position: absolute; right: -30px; bottom: 10px; transform: rotate(-45deg); font-size: 14px; color: black; font-weight: bold; white-space: nowrap; }
         #spinButton { margin-top: 30px; padding: 10px 20px; font-size: 16px; background: yellow; color: black; border: none; border-radius: 5px; cursor: pointer; transition: 0.3s; }
@@ -25,7 +25,7 @@
 
 <div id="notification">
     <h1 id="winnerText"></h1>
-    <button onclick="closeNotification()">Lên Trả bài</button>
+    <button onclick="closeNotification()">Lên Trả Bài</button>
 </div>
 
 <script>
@@ -33,22 +33,19 @@
     const spinButton = document.getElementById("spinButton");
     const winnerText = document.getElementById("winnerText");
     const notification = document.getElementById("notification");
-
     let options = []; 
     let isSpinning = false;
     let sliceAngle = 0;
-
-    // Load dữ liệu Wheel từ LocalStorage
+    let finalAngle = 0;
     function loadSavedWheel() {
         const savedWheel = JSON.parse(localStorage.getItem("currentWheel"));
         if (savedWheel && savedWheel.options.length > 0) {
             options = savedWheel.options;
             renderWheel();
         } else {
-            alert("Ko Tìm Thấy Vòng Quay Đã Lưu");
+            alert("Không tìm thấy Vòng Quay Đã Lưu!");
         }
     }
-
     function renderWheel() {
         wheelContainer.innerHTML = '';
         const totalSlices = options.length;
@@ -67,7 +64,6 @@
             wheelContainer.appendChild(slice);
         });
     }
-
     function spinWheel() {
         if (isSpinning) return;
 
@@ -75,27 +71,29 @@
         spinButton.disabled = true;
 
         const randomIndex = Math.floor(Math.random() * options.length);
-        const winningDegree = (180 - (randomIndex * sliceAngle + sliceAngle / 2)) + 1440; // Giữa phần slice
-        
-        wheelContainer.style.transition = "transform 5s cubic-bezier(0.17, 0.67, 0.83, 0.67)";
-        wheelContainer.style.transform = `rotate(${winningDegree}deg)`;
+        finalAngle = (360 - (randomIndex * sliceAngle + sliceAngle / 2)) + 1440;
+
+        wheelContainer.style.transition = "transform 6s cubic-bezier(0.17, 0.67, 0.83, 0.67)";
+        wheelContainer.style.transform = `rotate(${finalAngle}deg)`;
 
         setTimeout(() => {
-            showWinner(options[randomIndex]);
-            isSpinning = false;
-            spinButton.disabled = false;
-        }, 5100);
+            wheelContainer.style.transition = "none";
+            wheelContainer.style.transform = `rotate(${(finalAngle % 360)}deg)`;
+            
+            setTimeout(() => {
+                showWinner(options[randomIndex]);
+                isSpinning = false;
+                spinButton.disabled = false;
+            }, 500);
+        }, 6000);
     }
-
     function showWinner(winner) {
-        winnerText.textContent = `${winner} Lên Trả Bài Nào Em :)`;
+        winnerText.textContent = `[ ${winner} ] Lên Trả Bài Nào Em :) `;
         notification.style.display = "flex";
     }
-
     function closeNotification() {
         notification.style.display = "none";
     }
-
     window.onload = loadSavedWheel;
 </script>
 </body>
