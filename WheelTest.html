@@ -85,6 +85,7 @@
     }
 
     
+// Hàm Quay Wheel có hiệu ứng giảm tốc
 function spinWheel() {
     if (isSpinning) return;
 
@@ -121,14 +122,14 @@ function spinWheel() {
                 showWinner(options[selectedIndex]);
                 spinButton.disabled = false;
                 isSpinning = false;
-            }, 2000); // Đợi 2 giây
+            }, 6000); // Đợi 2 giây
         }
     }, 50); // Mỗi 0.05s cập nhật tốc độ và góc quay
 }
 
 // Hiện Notification kết quả
 function showWinner(winner) {
-    winnerText.textContent = `🎉 Chúc mừng ${winner} Lên Trả Bài :>`;
+    winnerText.textContent = `🎉 Chúc mừng ${winner} đã chiến thắng! 🎉`;
     notification.style.display = "flex";
 }
 
