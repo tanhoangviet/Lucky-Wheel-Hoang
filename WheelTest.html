@@ -3,14 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quay Vòng Quay May Mắn</title>
+    <title>Quay Wheel Test</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: #222; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         .wheel-container { position: relative; }
-        .wheel { width: 300px; height: 300px; border-radius: 50%; position: relative; overflow: hidden; box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+        .wheel { width: 300px; height: 300px; border-radius: 50%; position: relative; overflow: hidden; box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); transition: transform 6s ease-out; }
         .slice { position: absolute; width: 50%; height: 50%; clip-path: polygon(0 0, 100% 100%, 0 100%); transform-origin: bottom right; }
         .slice span { position: absolute; right: -30px; bottom: 10px; transform: rotate(-45deg); font-size: 14px; color: black; font-weight: bold; white-space: nowrap; }
+        .arrow { 
+            width: 0; 
+            height: 0; 
+            border-left: 20px solid transparent; 
+            border-right: 20px solid transparent; 
+            border-bottom: 30px solid yellow; 
+            position: absolute; 
+            top: -15px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            z-index: 10; 
+        }
         #spinButton { margin-top: 30px; padding: 10px 20px; font-size: 16px; background: yellow; color: black; border: none; border-radius: 5px; cursor: pointer; transition: 0.3s; }
         #spinButton:disabled { background: gray; cursor: not-allowed; }
         #notification { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); color: white; display: flex; align-items: center; justify-content: center; flex-direction: column; z-index: 9999; }
@@ -19,6 +31,7 @@
 </head>
 <body>
 <div class="wheel-container">
+    <div class="arrow"></div> <!-- Mũi tên chỉ kết quả -->
     <div id="wheel" class="wheel"></div>
 </div>
 <button id="spinButton" onclick="spinWheel()">🎡 Quay Ngay</button>
@@ -37,6 +50,7 @@
     let options = []; // Chứa danh sách options của bánh xe
     let isSpinning = false; // Trạng thái đang quay
     let sliceAngle = 0;
+    let finalAngle = 0;
 
     // Load dữ liệu Wheel từ LocalStorage
     function loadSavedWheel() {
@@ -49,7 +63,7 @@
         }
     }
 
-    // Render Wheel với các slice chuẩn
+    // Render Wheel với các lát cắt được phân chia chính xác
     function renderWheel() {
         wheelContainer.innerHTML = '';
         const totalSlices = options.length;
@@ -60,6 +74,7 @@
             slice.classList.add("slice");
             slice.style.backgroundColor = `hsl(${(index * 360) / totalSlices}, 70%, 60%)`;
             slice.style.transform = `rotate(${index * sliceAngle}deg)`;
+            slice.style.clipPath = `polygon(0 0, 100% 100%, 0 100%)`; // Chia đều lát cắt
             
             const span = document.createElement("span");
             span.textContent = text;
@@ -69,29 +84,49 @@
         });
     }
 
-    // Hàm Quay Wheel
-    function spinWheel() {
-        if (isSpinning) return;
+    // Hàm Quay Wheel có hiệu ứng giảm tốc
+// Hàm Quay Wheel có hiệu ứng giảm tốc
+function spinWheel() {
+    if (isSpinning) return;
 
-        isSpinning = true;
-        spinButton.disabled = true;
+    isSpinning = true;
+    spinButton.disabled = true;
 
-        const randomIndex = Math.floor(Math.random() * options.length);
-        const winningDegree = (360 - (randomIndex * sliceAngle + sliceAngle / 2)) + 1440; // Giữa phần slice
-        
-        wheelContainer.style.transition = "transform 5s cubic-bezier(0.17, 0.67, 0.83, 0.67)";
-        wheelContainer.style.transform = `rotate(${winningDegree}deg)`;
+    let speed = 200; // Tốc độ ban đầu
+    let currentAngle = 0; // Góc quay hiện tại
 
-        setTimeout(() => {
-            showWinner(options[randomIndex]);
-            isSpinning = false;
-            spinButton.disabled = false;
-        }, 5100); // Chờ kết thúc animation
-    }
+    // Giảm tốc theo thời gian
+    const decelerationInterval = setInterval(() => {
+        // Tính góc quay dựa vào tốc độ
+        currentAngle += speed;
+        wheelContainer.style.transform = `rotate(${currentAngle}deg)`;
+
+        // Giảm tốc độ theo từng bước (mỗi 0.5s giảm 5 đơn vị)
+        speed -= 5;
+
+        // Nếu tốc độ <= 0 thì dừng quay
+        if (speed <= 0) {
+            clearInterval(decelerationInterval);
+
+            // Thêm thời gian chờ 2 giây trước khi tính kết quả
+            setTimeout(() => {
+                // Tính toán ô kết quả
+                const sliceAngle = 360 / options.length;
+                const finalAngle = currentAngle % 360; // Lấy góc quay cuối cùng
+                const selectedIndex = Math.floor((360 - finalAngle - sliceAngle / 2) / sliceAngle) % options.length;
+
+                // Hiện kết quả
+                showWinner(options[selectedIndex]);
+                spinButton.disabled = false;
+                isSpinning = false;
+            }, 6000); // Đợi 2 giây trước khi hiển thị kết quả
+        }
+    }, 50); // Mỗi 0.05s cập nhật tốc độ và góc quay
+}
 
     // Hiện Notification kết quả
     function showWinner(winner) {
-        winnerText.textContent = `🎉 Chúc mừng ${winner} đã Lên Trả Bài Cho Ôg Thầy Hưng :)`;
+        winnerText.textContent = `🎉 Chúc mừng ${winner} đã chiến thắng! 🎉`;
         notification.style.display = "flex";
     }
 
