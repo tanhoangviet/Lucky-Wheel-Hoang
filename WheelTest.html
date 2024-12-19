@@ -113,15 +113,26 @@
     const spinButton = document.getElementById("spinButton");
     const winnerText = document.getElementById("winnerText");
     const notification = document.getElementById("notification");
-    const spinSound = document.getElementById("spinSound");
 
+    let options = [];
+    let isSpinning = false;
+    let sliceAngle = 0;
+    let finalAngle = 0;
 
-    let options = JSON.parse(localStorage.getItem("wheelOptions"));
+    function loadSavedWheel() {
+        const savedWheel = JSON.parse(localStorage.getItem("currentWheel"));
+        if (savedWheel && savedWheel.options.length > 0) {
+            options = savedWheel.options;
+            renderWheel();
+        } else {
+            alert("Không tìm thấy Vòng Quay Đã Lưu! Vui lòng kiểm tra lại.");
+        }
+    }
 
     function renderWheel() {
         wheelContainer.innerHTML = '';
         const totalSlices = options.length;
-        const sliceAngle = 360 / totalSlices;
+        sliceAngle = 360 / totalSlices;
 
         options.forEach((text, index) => {
             const slice = document.createElement("div");
@@ -131,8 +142,11 @@
 
             const span = document.createElement("span");
             span.textContent = text;
+
+            // Xoay text theo góc slice
             span.style.transform = `rotate(${sliceAngle / 2}deg)`;
-            span.style.fontSize = `${Math.min(12, 40 / totalSlices)}px`;
+            span.style.fontSize = `${Math.max(10, 25 / totalSlices)}px`;
+            span.style.whiteSpace = "nowrap";
 
             slice.appendChild(span);
             wheelContainer.appendChild(slice);
@@ -141,20 +155,20 @@
 
     function spinWheel() {
         if (isSpinning) return;
+
         isSpinning = true;
         spinButton.disabled = true;
 
-        const totalSlices = options.length;
-        const sliceAngle = 360 / totalSlices;
         const randomIndex = Math.floor(Math.random() * options.length);
-        const finalAngle = (360 - (randomIndex * sliceAngle + sliceAngle / 2)) + 1440;
+        finalAngle = (360 - (randomIndex * sliceAngle + sliceAngle / 2)) + 1440;
 
         wheelContainer.style.transition = "transform 6s cubic-bezier(0.17, 0.67, 0.83, 0.67)";
         wheelContainer.style.transform = `rotate(${finalAngle}deg)`;
 
         setTimeout(() => {
             wheelContainer.style.transition = "none";
-            wheelContainer.style.transform = `rotate(${finalAngle % 360}deg)`;
+            wheelContainer.style.transform = `rotate(${(finalAngle % 360)}deg)`;
+
             setTimeout(() => {
                 showWinner(options[randomIndex]);
                 isSpinning = false;
@@ -164,16 +178,18 @@
     }
 
     function showWinner(winner) {
-        spinSound.play();
         winnerText.textContent = `[ ${winner} ] Lên Trả Bài Nào Em :)`;
         notification.style.display = "flex";
+
+        const tadaSound = new Audio("tada-fanfare-a-6313.mp3");
+        tadaSound.play();
     }
 
     function closeNotification() {
         notification.style.display = "none";
     }
 
-    window.onload = renderWheel;
+    window.onload = loadSavedWheel;
 </script>
 </body>
 </html>
