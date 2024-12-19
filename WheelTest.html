@@ -114,15 +114,14 @@
     const winnerText = document.getElementById("winnerText");
     const notification = document.getElementById("notification");
     const spinSound = document.getElementById("spinSound");
-    const options = [];
-    let isSpinning = false;
-    let sliceAngle = 0;
-    let finalAngle = 0;
+
+
+    let options = JSON.parse(localStorage.getItem("wheelOptions"));
 
     function renderWheel() {
         wheelContainer.innerHTML = '';
         const totalSlices = options.length;
-        sliceAngle = 360 / totalSlices;
+        const sliceAngle = 360 / totalSlices;
 
         options.forEach((text, index) => {
             const slice = document.createElement("div");
@@ -133,7 +132,7 @@
             const span = document.createElement("span");
             span.textContent = text;
             span.style.transform = `rotate(${sliceAngle / 2}deg)`;
-            span.style.fontSize = `${Math.min(12, 40 / totalSlices)}px`; // Giảm kích thước chữ cho ô nhỏ.
+            span.style.fontSize = `${Math.min(12, 40 / totalSlices)}px`;
 
             slice.appendChild(span);
             wheelContainer.appendChild(slice);
@@ -145,15 +144,17 @@
         isSpinning = true;
         spinButton.disabled = true;
 
+        const totalSlices = options.length;
+        const sliceAngle = 360 / totalSlices;
         const randomIndex = Math.floor(Math.random() * options.length);
-        finalAngle = (360 - (randomIndex * sliceAngle + sliceAngle / 2)) + 1440;
+        const finalAngle = (360 - (randomIndex * sliceAngle + sliceAngle / 2)) + 1440;
 
         wheelContainer.style.transition = "transform 6s cubic-bezier(0.17, 0.67, 0.83, 0.67)";
         wheelContainer.style.transform = `rotate(${finalAngle}deg)`;
 
         setTimeout(() => {
             wheelContainer.style.transition = "none";
-            wheelContainer.style.transform = `rotate(${(finalAngle % 360)}deg)`;
+            wheelContainer.style.transform = `rotate(${finalAngle % 360}deg)`;
             setTimeout(() => {
                 showWinner(options[randomIndex]);
                 isSpinning = false;
